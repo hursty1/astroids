@@ -1,3 +1,4 @@
+from enum import Enum, auto
 import sys
 import pygame
 from asteroidfield import AsteroidField
@@ -7,6 +8,14 @@ from player import Player
 from asteroid import Asteroid
 from shot import Shot
 import pygame.freetype
+
+class States(Enum):
+    START = auto()
+    END = auto()
+    RUNNING = auto()
+
+
+
 
 def main():
     print("Starting Asteroids!")
@@ -25,6 +34,7 @@ def main():
     #state
     SCORE = 0
     LIVES = 5
+    game_state = States.START
     #groups
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
@@ -43,6 +53,7 @@ def main():
     AsteroidField()
 
 
+
     #health Icons
     for i in range(0,LIVES):
         HealthIcon(50 + 40*i, 70, i+1)
@@ -52,41 +63,48 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
                 return
-        for entity in updatable:
-            entity.update(dt)
-            
-        for asteroid in asteroids:
-            if player.inv_timer < 0:
-                collision = player.collision(asteroid)
-                collision = False
-                if collision:
-                    
-                    for l in life_group:
-                        # print(l.index)
-                        if l.index == LIVES:
-                            l.kill()
-                    LIVES -= 1
-                    player.take_damage(LIVES)
-                    if LIVES < 0:
-                        running = False
-                    player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2,PLAYER_RADIUS)
-                    player.spawn()
-                # sys.exit("player died")
-            else:
-                # print('player inv')
-                pass
-        for entity in drawable:
-            entity.draw(screen)
-        for asteroid in asteroids:
-            for bullet in shots:
-                if bullet.collision(asteroid):
-                    SCORE += 5
-                    asteroid.split()
-                    bullet.kill()
+            if event.type == pygame.KEYDOWN and game_state == States.START:
+                game_state = States.RUNNING
+        if game_state == States.START:
+            GAME_FONT.render_to(screen, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2), "Press any key to start", "white")
+            pygame.display.flip()
 
-        GAME_FONT.render_to(screen, (75,15), str(SCORE), "white")
-        pygame.display.flip()
-        dt = clock.tick(60) / 1000
+        if game_state == States.RUNNING:
+            for entity in updatable:
+                entity.update(dt)
+                
+            for asteroid in asteroids:
+                if player.inv_timer < 0:
+                    collision = player.collision(asteroid)
+                    collision = False
+                    if collision:
+                        
+                        for l in life_group:
+                            # print(l.index)
+                            if l.index == LIVES:
+                                l.kill()
+                        LIVES -= 1
+                        player.take_damage(LIVES)
+                        if LIVES < 0:
+                            running = False
+                        player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2,PLAYER_RADIUS)
+                        player.spawn()
+                    # sys.exit("player died")
+                else:
+                    # print('player inv')
+                    pass
+            for entity in drawable:
+                entity.draw(screen)
+            for asteroid in asteroids:
+                for bullet in shots:
+                    if bullet.collision(asteroid):
+                        SCORE += 5
+                        asteroid.split()
+                        bullet.kill()
+
+            GAME_FONT.render_to(screen, (75,15), str(SCORE), "white")
+            pygame.display.flip()
+            dt = clock.tick(60) / 1000
 
 if __name__=="__main__":
     main()
